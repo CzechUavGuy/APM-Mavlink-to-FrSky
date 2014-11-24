@@ -131,7 +131,7 @@ void readInternalFrame() {
   nr = readFromFrSkySerial();
   DEBUG_PRINT(" RSSI: "); DEBUG_PRINT2(nr, HEX);
   rssi = nr;
-//  sendRssi();
+  sendRssi();
   for (int i = 0; i < 5; i++) {ch=readFromFrSkySerial();}  //ignored bytes
   ch = readFromFrSkySerial();
   if (ch != 0x7E) {DEBUG_PRINT(" KO: "); DEBUG_PRINT2LN(ch, HEX);} else {DEBUG_PRINTLN(" ");}
@@ -187,28 +187,24 @@ void sendAccelerometer() {
 }
 
 void sendRssi() {
-//this function is not received by Mission planner :(
 //uint8_t system_id, uint8_t component_id, mavlink_message_t* msg,uint8_t rssi, uint8_t remrssi, uint8_t txbuf, uint8_t noise, uint8_t remnoise, uint16_t rxerrors, uint16_t fixed
-  mavlink_msg_radio_pack (100, 200, &msg, 42, 42, 53, 54, 55, 56, 57);
+  mavlink_msg_radio_pack (100, 200, &msg, rssi, rssi, 0, 0, 0, 0, 0);
   len = mavlink_msg_to_send_buffer(buf, &msg);
+  #ifndef DEBUG
+    Serial.write(buf, len); 
+  #endif
 }
 
 void sendBatteryVoltage() {
-//neither of those functions are received by Mission planner :(  
-  
-//uint8_t system_id, uint8_t component_id, mavlink_message_t* msg, uint16_t Vcc, uint8_t I2Cerr
-  mavlink_msg_hwstatus_pack (100, 200, &msg, vcc, 58);
-
-  //possible error - missing len = mavlink_msg_to_send ...
-
 //uint8_t system_id, uint8_t component_id, mavlink_message_t* msg,
 //uint32_t onboard_control_sensors_present, uint32_t onboard_control_sensors_enabled, uint32_t onboard_control_sensors_health, uint16_t load, 
 //uint16_t voltage_battery, int16_t current_battery, int8_t battery_remaining, uint16_t drop_rate_comm, uint16_t errors_comm, uint16_t errors_count1, 
 //uint16_t errors_count2, uint16_t errors_count3, uint16_t errors_count4)
-byte x = 51;
-  mavlink_msg_sys_status_pack(100, 200, &msg, x, x, x, x, vcc, vcc, x, x, x, x, x, x, x);
-  
+  mavlink_msg_sys_status_pack(100, 200, &msg, 0, 0, 0, 0, vcc, 0, rssi, 0, 0, 0, 0, 0, 0);  //I am sending rssi here because of DroidPlanners location of remaining battery % is exactly the place where I want RSSI to show
   len = mavlink_msg_to_send_buffer(buf, &msg);
+  #ifndef DEBUG
+    Serial.write(buf, len); 
+  #endif
 }
 
 void sendGpsCoord() {
