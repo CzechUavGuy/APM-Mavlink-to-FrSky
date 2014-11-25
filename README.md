@@ -1,7 +1,7 @@
 This project is based on https://github.com/vizual54/APM-Mavlink-to-FrSky.
 It's modified so that ground station is not supposed to be FrSky FLD-02 or other display, but PC or Tablet/cell phone running Mavlink ground station software (eg. MissionPlanner/DroidPlanner/Andropilot). Two Arduinos are needed to make this project work.
 
-It consists of two parts: Sending part that is on the plane and Receiving part that is connected to ground station.
+It consists of three parts: Sending part that is on the plane and Receiving part that is connected to ground station. Third part (receiving_part_test) is a demonstration of this entire project. 
 
 Currently, only one-way transmission is supported, I am not sure why I can't manage to uplink data back to airplane using FrSky telemetry. Maybe it is not possible at all using FrSky.
 
@@ -10,3 +10,5 @@ Sending part receives telemetry stream from APM device using telemetry UART with
 Mediating protocol is my own proprietary using two byte telemetry. 1 bit of each byte marks first byte or second byte. 4 bits mark message type. 10 bits left to actual data. See defines.h
 
 Receiving part receives data and after each two byte packet it generates MavLink message that is immediately sent to Ground Station software over Arduino hardware UART.
+
+Receiving part test is a demonstration of entire project. Just upload it to an Arduino, connect it to ground control station which supports MavLink (MissionPlanner / DroidPlanner / ArduPilot) and see "fake" telemetry being received from virtual airplane flying above Prague (CZ).

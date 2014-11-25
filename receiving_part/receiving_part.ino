@@ -46,7 +46,7 @@ uint16_t len;
 float accx=0.0;
 float accy=0.0;
 float accz=0.0;
-int32_t altitude=0;
+int32_t altitude=0;    //mm above sea level
 uint16_t latDEG=0;
 uint16_t latMIL=0;
 uint16_t latMIC=0;
@@ -59,8 +59,8 @@ uint16_t apmMode=0;
 uint16_t rssi=0;
 uint16_t vcc=4500;
 int idx=0;
+float vgnd=0.0;    //cm/s
 
-float vgnd=0.0;
 SoftwareSerial frSkySerial(11, 9, true); // RX, TX, inverted. Only RX used now.
 bool wasLast7E=false;
 unsigned char ch;
@@ -179,7 +179,7 @@ void setup() {
 
 void sendAccelerometer() {
 //uint8_t system_id, uint8_t component_id, mavlink_message_t* msg, uint32_t time_boot_ms, float roll, float pitch, float yaw, float rollspeed, float pitchspeed, float yawspeed
-  mavlink_msg_attitude_pack (100, 200, &msg, 100000, accy, accx, accz, 0.0, 0.0, 0.0);
+  mavlink_msg_attitude_pack (100, 200, &msg, 0, accy, accx, accz, 0.0, 0.0, 0.0);
   len = mavlink_msg_to_send_buffer(buf, &msg);
   #ifndef DEBUG
     Serial.write(buf, len); 
@@ -213,7 +213,7 @@ void sendGpsCoord() {
   int32_t lat = (latDEG * 10000000) + ((uint32_t)   latMIL * 10000) + (latMIC * 10);
   lat = lat - 900000000;
 //uint8_t system_id, uint8_t component_id, mavlink_message_t* msg, uint64_t time_usec, uint8_t fix_type, int32_t lat, int32_t lon, int32_t alt, uint16_t eph, uint16_t epv, uint16_t vel, uint16_t cog, uint8_t satellites_visible
-  mavlink_msg_gps_raw_int_pack (100, 200, &msg, 130.0, gpsStatus, lat, lon, altitude, rssi*100 /* ?hdop/100? */, 80, 90, vcc/10.0/*groundcourse*/, numberOfSatelites);
+  mavlink_msg_gps_raw_int_pack (100, 200, &msg, 0, gpsStatus, lat, lon, altitude, 0, 0, vgnd, 0, numberOfSatelites);
   len = mavlink_msg_to_send_buffer(buf, &msg);
   #ifndef DEBUG
     Serial.write(buf, len);  
@@ -226,7 +226,7 @@ void sendGpsCoord2() {
   int32_t lat = (latDEG * 10000000) + ((uint32_t)   latMIL * 10000) + (latMIC * 10);
   lat = lat - 900000000;
 //uint8_t system_id, uint8_t component_id, mavlink_message_t* msg,uint32_t time_boot_ms, int32_t lat, int32_t lon, int32_t alt, int32_t relative_alt, int16_t vx, int16_t vy, int16_t vz, uint16_t hdg
-  mavlink_msg_global_position_int_pack (100, 200, &msg, 130.0, lat, lon, altitude, altitude, 0, 0, 0, 0);
+  mavlink_msg_global_position_int_pack (100, 200, &msg, 0, lat, lon, altitude, altitude, 0, 0, 0, 0);    //sending both altitudes the same - So far I can't compute relative alt. What's more, each GCS shows different alt, so its better for them to be the same.
   len = mavlink_msg_to_send_buffer(buf, &msg);
   #ifndef DEBUG
     Serial.write(buf, len);  
@@ -235,7 +235,7 @@ void sendGpsCoord2() {
 
 void sendAltitude() {
   //uint8_t system_id, uint8_t component_id, mavlink_message_t* msg, float airspeed, float groundspeed, int16_t heading, uint16_t throttle, float alt, float climb)
-  mavlink_msg_vfr_hud_pack (100, 200, &msg, 0, vgnd, 43000, vcc/*ch3percent*/, 128456.0, 234567);
+  mavlink_msg_vfr_hud_pack (100, 200, &msg, vgnd/100, vgnd/100, 0, 0, altitude/1000, 0);    //sending both speeds the same - So far I can't compute airspeed. What's more, each GCS shows different speed, so its better for them to be the same.
   len = mavlink_msg_to_send_buffer(buf, &msg);
   #ifndef DEBUG
     Serial.write(buf, len);
@@ -280,4 +280,3 @@ void loop() {
     if (((idx % 10) == 0) && (idx <= 100)) {sendParam();}  //HACK: Mission planner needs some parameters during initialization. This is a way to convince him he is talking to real Mavlink. There is a workaround, you can press a key combination to connect in readonly mode. Droid planner does not need this.
   }
 }
-
