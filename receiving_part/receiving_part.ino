@@ -57,7 +57,7 @@ uint16_t numberOfSatelites=0;
 uint16_t gpsStatus=0;
 uint16_t apmMode=0;
 uint16_t rssi=0;
-uint16_t vcc=4500;
+uint16_t vcc=0;    //battery voltage
 int idx=0;
 float vgnd=0.0;    //cm/s
 
@@ -124,14 +124,14 @@ void readInternalFrame() {
   DEBUG_PRINT("ID: ");
   byte nr = readFromFrSkySerial();
   DEBUG_PRINT("AD1: "); DEBUG_PRINT2(nr, HEX);
-  nr = readFromFrSkySerial();
+  nr = readFromFrSkySerial();    //so far I do not have any use for AD1 value. Can be easily fixed.
   DEBUG_PRINT(" AD2: "); DEBUG_PRINT2(nr, HEX);
   vcc = (uint16_t)(25.87 * nr);
-//  sendBatteryVoltage();
   nr = readFromFrSkySerial();
   DEBUG_PRINT(" RSSI: "); DEBUG_PRINT2(nr, HEX);
   rssi = nr;
   sendRssi();
+  sendBatteryVoltage();
   for (int i = 0; i < 5; i++) {ch=readFromFrSkySerial();}  //ignored bytes
   ch = readFromFrSkySerial();
   if (ch != 0x7E) {DEBUG_PRINT(" KO: "); DEBUG_PRINT2LN(ch, HEX);} else {DEBUG_PRINTLN(" ");}
@@ -146,7 +146,15 @@ void decodeBytes() {
     case karelACCX : {accx = ((int)data - 180) * 3.14159265 / 180.0; DEBUG_PRINT(" ACCX: "); DEBUG_PRINT2LN(accx, 3); sendAccelerometer(); break; }
     case karelACCY : {accy = ((int)data - 180) * 3.14159265 / 180.0; DEBUG_PRINT(" ACCY: "); DEBUG_PRINT2LN(accy, 3); sendAccelerometer(); break; }
     case karelACCZ : {accz = ((int)data - 180) * 3.14159265 / 180.0; DEBUG_PRINT(" ACCZ: "); DEBUG_PRINT2LN(accz, 3); sendAccelerometer(); break; }
-    case karelALT :  {altitude = ((int32_t)data) * 2000; DEBUG_PRINT(" ALT: "); DEBUG_PRINT2LN(altitude, DEC); sendAltitude(); break; }
+/*    case karelACCXY : {
+      accy = (((int) (data >> 4)) * 6 - 180) * 3.14159265 / 180.0; DEBUG_PRINT(" ACCY: "); DEBUG_PRINT2LN(accy, 3);
+      byte index = (byte) (data & 0b00001111);
+      const int8_t pitchLimits[16] = {-90, -70, -50, -30, -20, -10, -5, 0, 5, 10, 15, 20, 30, 50, 70, 90};
+      accx = pitchLimits[index];
+      accx = accx * 3.14159265 / 180.0; DEBUG_PRINT(" ACCX: "); DEBUG_PRINT2LN(accx, 3);
+      sendAccelerometer(); break; 
+    }*/
+    case karelALT    : {altitude = ((int32_t)data) * 2000; DEBUG_PRINT(" ALT: "); DEBUG_PRINT2LN(altitude, DEC); sendAltitude(); break; }
     case karelLatDEG : {latDEG = data; DEBUG_PRINT(" latDEG: "); DEBUG_PRINT2LN(data, DEC); sendGpsCoord(); break;}
     case karelLatMIL : {latMIL = data; DEBUG_PRINT(" latMIL: "); DEBUG_PRINT2LN(data, DEC); sendGpsCoord2(); break;}
     case karelLatMIC : {latMIC = data; DEBUG_PRINT(" latMIC: "); DEBUG_PRINT2LN(data, DEC); sendGpsCoord(); break;}
@@ -154,7 +162,7 @@ void decodeBytes() {
     case karelLonMIL : {lonMIL = data; DEBUG_PRINT(" lonMIL: "); DEBUG_PRINT2LN(data, DEC); sendGpsCoord(); break;}
     case karelLonMIC : {lonMIC = data; DEBUG_PRINT(" lonMIC: "); DEBUG_PRINT2LN(data, DEC); sendGpsCoord2(); break;}
     case karelVGND   : {vgnd = (float)data; DEBUG_PRINT(" vGND: "); DEBUG_PRINT2LN(vgnd, DEC); sendAltitude(); break;}
-    case karelSTAT : {
+    case karelSTAT   : {
       gpsStatus = data >> 8;
       numberOfSatelites = (data >> 4) & 0x0F;
       apmMode = data & 0x0F;
@@ -165,7 +173,7 @@ void decodeBytes() {
     }
     default:
     {
-      DEBUG_PRINT("Unknown FrSky data: "); DEBUG_PRINT2(firstByte, HEX); DEBUG_PRINT2LN(secondByte, HEX);
+      DEBUG_PRINT("Unknown FrSky data: "); DEBUG_PRINT2(firstByte, HEX); DEBUG_PRINT2(secondByte, HEX); DEBUG_PRINT(" "); DEBUG_PRINTLN(type);
     } 
   }
 }
@@ -196,10 +204,6 @@ void sendRssi() {
 }
 
 void sendBatteryVoltage() {
-//uint8_t system_id, uint8_t component_id, mavlink_message_t* msg,
-//uint32_t onboard_control_sensors_present, uint32_t onboard_control_sensors_enabled, uint32_t onboard_control_sensors_health, uint16_t load, 
-//uint16_t voltage_battery, int16_t current_battery, int8_t battery_remaining, uint16_t drop_rate_comm, uint16_t errors_comm, uint16_t errors_count1, 
-//uint16_t errors_count2, uint16_t errors_count3, uint16_t errors_count4)
   mavlink_msg_sys_status_pack(100, 200, &msg, 0, 0, 0, 0, vcc, 0, rssi, 0, 0, 0, 0, 0, 0);  //I am sending rssi here because of DroidPlanners location of remaining battery % is exactly the place where I want RSSI to show
   len = mavlink_msg_to_send_buffer(buf, &msg);
   #ifndef DEBUG
@@ -276,7 +280,7 @@ void loop() {
     if (ch == 0x7E) {wasLast7E = true; ok = true;} else {wasLast7E = false;}
     if (!ok) {DEBUG_PRINT("??? "); DEBUG_PRINT2LN(ch, HEX);}
     idx++;
-    if ((idx % 5) == 0) {sendHeartBeat();}  //I don't know where and when to send heartbeat. Maybe here is a good place?
+    if ((idx % 2) == 0) {sendHeartBeat();}  //I don't know where and when to send heartbeat. Maybe here is a good place? 
     if (((idx % 10) == 0) && (idx <= 100)) {sendParam();}  //HACK: Mission planner needs some parameters during initialization. This is a way to convince him he is talking to real Mavlink. There is a workaround, you can press a key combination to connect in readonly mode. Droid planner does not need this.
   }
 }

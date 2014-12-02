@@ -56,13 +56,14 @@ typedef unsigned char byte;
 #define ACCY           0x25
 #define ACCZ           0x26
 #define CURRENT        0x28
+#define ACCXY          0x29
 #define VOLTAGE        0x3A
 #define VOLTAGEDEC     0x3B
 
 #define karelACCX      0x00
 #define karelACCY      0x01
-#define karelACCZ      0x0A
-#define karelALT       0x02
+//#define karelACCXY     0x00
+#define karelACCZ      0x02
 
 #define karelLatDEG    0x03
 #define karelLatMIL    0x04
@@ -72,6 +73,7 @@ typedef unsigned char byte;
 #define karelLonMIC    0x08
 
 #define karelVGND      0x09
+#define karelALT       0x0A
 #define karelSTAT      0x0B
 
 /*
