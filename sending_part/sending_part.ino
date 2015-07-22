@@ -40,11 +40,12 @@ How to use:
 #include "SimpleFIFO.h"
 #include <GCS_MAVLink.h>
 #include "defines.h"
+#include "receiver.h"
 
 #define HEARTBEATLED 13
 #define HEARTBEATFREQ 500
 
-//#define DEBUG  //uncomment this to get debug information on pin 9
+#define DEBUG  //uncomment this to get debug information on pin 9
 
 Mavlink *dataProvider;
 
@@ -68,12 +69,12 @@ int pocet=0;
 void setup() {
     #ifdef DEBUG
         debugSerial = new SoftwareSerial(8, 9);    //RX, TX. for debug purposes, only TX makes sense
-        debugSerial->begin(38400);
+        debugSerial->begin(115200);
     #endif
     
     // FrSky data port pin 9 rx, 10 tx. Only tx is used as of now.
-    frSkySerial = new SoftwareSerial(11, 10, true);         // RX, TX, inverted
-    frSkySerial->begin(9600);
+//    frSkySerial = new SoftwareSerial(11, 10, true);         // RX, TX, inverted
+//    frSkySerial->begin(57600);
     
     Serial.begin(115200);   // Incoming data from APM
     Serial.flush();
@@ -114,6 +115,8 @@ void setup() {
         debugSerial->println(" bytes");
     #endif
 
+
+  receiverStart(1);        //receiver connected to PIN 3  (interrupt 1)
 }
 
 void loop() {
@@ -157,13 +160,20 @@ void updateHeartbeat()
         hbMillis = currentMilillis;
         if (hbState == LOW) {hbState = HIGH;} else {hbState = LOW;}
         digitalWrite(HEARTBEATLED, hbState); 
+        #ifdef DEBUG          
+            for (int i = 0; i < 8; i++) {
+              debugSerial->print (receiverChannel[i]);
+              debugSerial->print (" ");
+            }
+            debugSerial->println();        
+        #endif
     }
 }
 
 void sendFrSkyData() {
     counter++;
     frSky->sendFrSky10Hz(frSkySerial, dataProvider, counter);
-    #ifdef DEBUG
+/*    #ifdef DEBUG
         debugSerial->print(pocet);
         if (pocet < 10) {debugSerial->print(" ");}
         if (pocet < 100) {debugSerial->print(" ");}
@@ -172,6 +182,7 @@ void sendFrSkyData() {
         debugSerial->println(dataProvider->getAccY());
         pocet = 0;
     #endif
+    */
 }
 
 void processData() {    

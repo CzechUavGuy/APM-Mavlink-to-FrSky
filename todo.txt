@@ -1,0 +1,1 @@
+Correct sending part so that it sends fluently 2Hz data. Perhaps split send2Hz to multiple methods and separate their sending by more frequent data

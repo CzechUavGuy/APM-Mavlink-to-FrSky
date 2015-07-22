@@ -1,0 +1,6 @@
+Zdar mam takovy problem s Arduinem. Konkretne pouzivam Arduino pro mini, atmega328 5V 16MHz.
+Potrebuju 2-3 seriove porty, jeden resim samozrejme pres HW UART, druhy a treti pouzivam (new)SoftwareSerial. U jednoho z nich potrebuju invertovani, coz je super ze to umi.
+Ted ale nove jsem chtel pridat funkci pouzivajici interrupt 0 nebo 1 (na pinech 2 nebo 3), ktery bude cist zmenu logicke hodnoty. Tuhle zmenu potrebuju cist s dost vysokoup resnosti (ctu CPPM z receiveru, takze potrebuju presnost na jednotky mikrosekund).
+Kdyz mam samotny program bez (new)SoftwareSerial, tak mi ten interrupt funguje bezvadne, ale kdyz pidam ten seriak (rychlost 38400 a 9600), tak presnost toho preruseni klesne drasticky, klidne i o nekolik set mikrosekund.
+
+Co s tim? 
