@@ -2,7 +2,7 @@
         @author 	CzechUavGuy
         @contact 	czechuavguy@gmail.com
     
-        code was shamelessly stolen from MultiWii project, which is GPS license.
+        code was shamelessly stolen from MultiWii project, which is GPL license.
 	
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by

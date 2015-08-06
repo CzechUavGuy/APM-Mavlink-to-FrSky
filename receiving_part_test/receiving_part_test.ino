@@ -22,13 +22,15 @@
 
 /*
 This part can serve as a demonstration of what the entire project can do.
-Simply upload this to an Arduino and then connect Arduino to ground control station that supports MavLink (MissionPlanner, DroidPlanner, DroidPlanner2, ArduPilot). No other HW required.
+Simply upload this to an Arduino and then connect Arduino to ground control station that supports MavLink (MissionPlanner, DroidPlanner, DroidPlanner2, ArduPilot). 
+To connect arduino to Android device, make sure you use arduino with FTDI (Uno, Nano), connect through OTG cable. No other HW required.
 You should then see an airplane flying above Prague (CZ), banking from left to right, at an altitude 123m, RSSI of 69%, battery 4.2V, speed 10m/s
 */
 
+
 #include <SoftwareSerial.h>   
-#include <FastSerial.h>  
-#include "Mavlink.h"
+#include <FastSerial.h>
+#include <Mavlink.h>
 #include <GCS_MAVLink.h>
 
 FastSerialPort0(Serial); 
@@ -54,12 +56,12 @@ uint16_t vcc=4200;
 int idx=0;
 float vgnd=1000.0;    //[cm/s ]
 
-SoftwareSerial frSkySerial(11, 12, true); // RX, TX, inverted
-bool wasLast7E=false;
-unsigned char ch;
-bool hasFirstByte=false;
-byte firstByte;
-byte secondByte;
+// SoftwareSerial frSkySerial(11, 12, true); // RX, TX, inverted
+//gool wasLast7E=false;
+//unsigned char ch;
+//bool hasFirstByte=false;
+//byte firstByte;
+//byte secondByte;
 
 void setup() {
   Serial.begin(57600);

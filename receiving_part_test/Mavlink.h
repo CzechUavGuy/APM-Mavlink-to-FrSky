@@ -3,7 +3,7 @@
 
 #include "ifrskydataprovider.h"
 #include "SoftwareSerial.h"
-#include <FastSerial.h>
+#include "FastSerial.h"
 #include <GCS_MAVLink.h>
 
 class Mavlink :	public IFrSkyDataProvider
