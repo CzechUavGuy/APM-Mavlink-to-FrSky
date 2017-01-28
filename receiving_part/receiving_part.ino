@@ -68,6 +68,9 @@ bool hasFirstByte=false;
 byte firstByte;
 byte secondByte;
 
+//use this switch if you want to connect sending part and receiving part together without going through FrSky. FrSky adds frames (internal frame and user frame) which changes the logic quite a bit.
+#define CONNECTDIRECTLY
+
 //#define DEBUG
 #ifdef DEBUG
   #define DEBUG_PRINTLN(x)  Serial.println (x)
@@ -275,10 +278,22 @@ void loop() {
   if (frSkySerial.available()) {
     bool ok=false;
     ch = frSkySerial.read();
-    if ((ch == 0xFE) && (wasLast7E)) {readInternalFrame(); ok = true;}
-    if ((ch == 0xFD) && (wasLast7E)) {readUserFrame(); ok = true;}
-    if (ch == 0x7E) {wasLast7E = true; ok = true;} else {wasLast7E = false;}
-    if (!ok) {DEBUG_PRINT("??? "); DEBUG_PRINT2LN(ch, HEX);}
+    #ifndef CONNECTDIRECTLY
+      if ((ch == 0xFE) && (wasLast7E)) {readInternalFrame(); ok = true;}
+      if ((ch == 0xFD) && (wasLast7E)) {readUserFrame(); ok = true;}
+      if (ch == 0x7E) {wasLast7E = true; ok = true;} else {wasLast7E = false;}
+      if (!ok) {DEBUG_PRINT("??? "); DEBUG_PRINT2LN(ch, HEX);}
+    #endif
+    #ifdef CONNECTDIRECTLY
+      DEBUG_PRINT2(ch, HEX); DEBUG_PRINT(" ");
+      if (hasFirstByte) {
+        if (isSecondByte(ch)) {
+          secondByte = ch; 
+          decodeBytes();
+          hasFirstByte=false;
+        } else {if (isFirstByte(ch)) {firstByte = ch; hasFirstByte = true;}}
+      } else    if (isFirstByte(ch)) {firstByte = ch; hasFirstByte = true;}
+    #endif
     idx++;
     if ((idx % 2) == 0) {sendHeartBeat();}  //I don't know where and when to send heartbeat. Maybe here is a good place? 
     if (((idx % 10) == 0) && (idx <= 100)) {sendParam();}  //HACK: Mission planner needs some parameters during initialization. This is a way to convince him he is talking to real Mavlink. There is a workaround, you can press a key combination to connect in readonly mode. Droid planner does not need this.
