@@ -171,7 +171,7 @@ unsigned char FrSky::addBufferData(const char id, Mavlink* dataProvider) {
 
 unsigned char FrSky::writeBuffer(const int length, SoftwareSerial* frSkySerial) {
     for (int i = 0; i < length; i++) {
-//        frSkySerial->write((byte)frskyBuffer[i]);
+        frSkySerial->write((byte)frskyBuffer[i]);
     }
     return 0;
 }

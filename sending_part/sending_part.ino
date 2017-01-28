@@ -72,11 +72,11 @@ void setup() {
         debugSerial->begin(115200);
     #endif
     
-    // FrSky data port pin 9 rx, 10 tx. Only tx is used as of now.
-//    frSkySerial = new SoftwareSerial(11, 10, true);         // RX, TX, inverted
-//    frSkySerial->begin(57600);
+    // FrSky data port pin 11 rx (not used), 10 tx. Only tx is used as of now.
+    frSkySerial = new SoftwareSerial(11, 10, true);         // RX, TX, inverted
+    frSkySerial->begin(9600);
     
-    Serial.begin(115200);   // Incoming data from APM
+    Serial.begin(57600);   // Incoming data from APM
     Serial.flush();
         
     #ifdef DEBUG
@@ -138,7 +138,6 @@ void loop() {
     }
     
     while (Serial.available() > 0) {
-      
         if (queue.count() < 128) {
             char c = Serial.read();
             pocet++;
@@ -160,33 +159,30 @@ void updateHeartbeat()
         hbMillis = currentMilillis;
         if (hbState == LOW) {hbState = HIGH;} else {hbState = LOW;}
         digitalWrite(HEARTBEATLED, hbState); 
-        #ifdef DEBUG          
-            for (int i = 0; i < 8; i++) {
-              debugSerial->print (receiverChannel[i]);
-              debugSerial->print (" ");
-            }
-            debugSerial->println();        
-        #endif
+ //       #ifdef DEBUG          
+ //           for (int i = 0; i < 8; i++) {
+ //             debugSerial->print (receiverChannel[i]);
+ //             debugSerial->print (" ");
+ //           }
+ //           debugSerial->println();        
+ //       #endif
     }
 }
 
 void sendFrSkyData() {
     counter++;
     frSky->sendFrSky10Hz(frSkySerial, dataProvider, counter);
-/*    #ifdef DEBUG
-        debugSerial->print(pocet);
-        if (pocet < 10) {debugSerial->print(" ");}
-        if (pocet < 100) {debugSerial->print(" ");}
-        if (pocet < 1000) {debugSerial->print(" ");}
-        debugSerial->print(" ");
+    #ifdef DEBUG
+        debugSerial->print("ACCY: ");
         debugSerial->println(dataProvider->getAccY());
         pocet = 0;
     #endif
-    */
+    
 }
 
 void processData() {    
     while (queue.count() > 0) { 
+        
         bool done = dataProvider->parseMessage(queue.dequeue());
         if (done && !firstParse) {
             firstParse = true;
